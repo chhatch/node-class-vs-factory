@@ -5,6 +5,7 @@ Compare memory usage when creating many instances via:
 - a class with prototype methods
 - a factory function that returns per-instance closure methods
 - a factory function with thin wrapper methods that delegate to shared logic
+- a factory function with shared prototype methods and hidden per-instance state
 
 Both approaches are run separately. Instances are retained in memory to avoid GC, then a V8 heap snapshot is taken for analysis.
 
@@ -33,6 +34,9 @@ node --expose-gc dist/main.js --approach factory --count 100000
 
 # Factory-thin (delegates heavy logic to shared functions)
 node --expose-gc dist/main.js --approach factory-thin --count 100000
+
+# Factory-prototype (shared prototype methods with hidden state)
+node --expose-gc dist/main.js --approach factory-prototype --count 100000
 ```
 
 Output includes quick memory usage info and writes a heap snapshot:
@@ -40,6 +44,7 @@ Output includes quick memory usage info and writes a heap snapshot:
 - `heap-class-<count>.heapsnapshot`
 - `heap-factory-<count>.heapsnapshot`
 - `heap-factory-thin-<count>.heapsnapshot`
+- `heap-factory-prototype-<count>.heapsnapshot`
 
 You can also use the provided scripts:
 
@@ -47,12 +52,13 @@ You can also use the provided scripts:
 yarn start:class
 yarn start:factory
 yarn start:factory-thin
+yarn start:factory-prototype
 ```
 
 ## CLI
 
 ```bash
-node --expose-gc dist/main.js --approach class|factory|factory-thin --count <N>
+node --expose-gc dist/main.js --approach class|factory|factory-thin|factory-prototype --count <N>
 ```
 
 ## Inspecting the Heap Snapshots

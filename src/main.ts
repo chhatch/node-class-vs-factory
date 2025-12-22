@@ -12,7 +12,7 @@ interface CliOptions {
 function printUsage(): void {
   console.log("Usage:");
   console.log(
-    "  node --expose-gc dist/main.js --approach class|factory|factory-thin --count <N>"
+    "  node --expose-gc dist/main.js --approach class|factory|factory-thin|factory-prototype --count <N>"
   );
 }
 
@@ -23,7 +23,12 @@ function parseArgs(argv: string[]): CliOptions | null {
     const a = argv[i];
     if (a === "--approach" && i + 1 < argv.length) {
       const val = argv[++i] as Approach;
-      if (val === "class" || val === "factory" || val === "factory-thin") {
+      if (
+        val === "class" ||
+        val === "factory" ||
+        val === "factory-thin" ||
+        val === "factory-prototype"
+      ) {
         approach = val;
       }
     } else if (a === "--count" && i + 1 < argv.length) {

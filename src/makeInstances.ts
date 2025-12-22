@@ -1,8 +1,9 @@
 import { HeavyThing } from "./heavyClass";
 import { createHeavyThing, type HeavyThingLike } from "./heavyFactory";
 import { createHeavyThingThin } from "./heavyFactoryThin";
+import { createHeavyThingPrototype } from "./heavyFactoryPrototype";
 
-export type Approach = "class" | "factory" | "factory-thin";
+export type Approach = "class" | "factory" | "factory-thin" | "factory-prototype";
 
 /**
  * Module-level retention array to avoid GC of created instances.
@@ -54,7 +55,9 @@ export function makeInstances(options: MakeInstancesOptions): HeavyThingLike[] {
         ? (new HeavyThing(id, name, values, bias, scale, tag) as unknown as HeavyThingLike)
         : approach === "factory"
         ? createHeavyThing(id, name, values, bias, scale, tag)
-        : createHeavyThingThin(id, name, values, bias, scale, tag);
+        : approach === "factory-thin"
+        ? createHeavyThingThin(id, name, values, bias, scale, tag)
+        : createHeavyThingPrototype(id, name, values, bias, scale, tag);
     out[i] = inst;
     retainedInstances.push(inst);
   }

@@ -15,8 +15,10 @@ export class HeavyThing {
   private bias: number;
   /** Linear transform scale applied by some methods. */
   private scale: number;
-  /** Misc metadata not used for heavy allocations. */
-  private readonly meta: { readonly createdAt: number; tag: string };
+  /** Creation timestamp (flattened; no nested meta object). */
+  private readonly createdAt: number;
+  /** Instance tag (flattened). */
+  private tag: string;
 
   /**
    * Create a new `HeavyThing`.
@@ -40,7 +42,8 @@ export class HeavyThing {
     this.values = Array.from(values);
     this.bias = bias;
     this.scale = scale;
-    this.meta = { createdAt: Date.now(), tag };
+    this.createdAt = Date.now();
+    this.tag = tag;
   }
 
   /**
@@ -66,12 +69,12 @@ export class HeavyThing {
     hash = Math.imul(hash, 16777619) >>> 0;
     hash ^= this.name.length | 0;
     hash = Math.imul(hash, 16777619) >>> 0;
-    // Step 3: mix metadata timestamp and tag chars
-    const ts = this.meta.createdAt | 0;
+    // Step 3: mix timestamp and tag chars
+    const ts = this.createdAt | 0;
     hash ^= ts;
     hash = Math.imul(hash, 2246822519) >>> 0;
-    for (let i = 0; i < this.meta.tag.length; i++) {
-      hash ^= this.meta.tag.charCodeAt(i) | 0;
+    for (let i = 0; i < this.tag.length; i++) {
+      hash ^= this.tag.charCodeAt(i) | 0;
       hash = (hash + ((hash << 13) | 0)) >>> 0;
       hash ^= hash >>> 7;
     }
@@ -114,8 +117,8 @@ export class HeavyThing {
       (this.values as number[])[i] = clamped;
     }
     // update bias/scale heuristically to track normalization history
-    this.bias = (this.bias * 0.9) + (mean * 0.1);
-    this.scale = (this.scale * 0.9) + (1 / (std + epsilon)) * 0.1;
+    this.bias = this.bias * 0.9 + mean * 0.1;
+    this.scale = this.scale * 0.9 + (1 / (std + epsilon)) * 0.1;
   }
 
   /**
@@ -140,7 +143,7 @@ export class HeavyThing {
     // add tiny transformation to avoid constant folding
     for (let i = 0; i < n; i++) {
       const v = output[i];
-      const adjusted = (v * this.scale + this.bias * 0.001);
+      const adjusted = v * this.scale + this.bias * 0.001;
       output[i] = adjusted;
     }
     return output;
@@ -167,7 +170,7 @@ export class HeavyThing {
     const lines: string[] = [];
     lines.push(`id=${this.id}`);
     lines.push(`name=${this.name}`);
-    lines.push(`tag=${this.meta.tag}`);
+    lines.push(`tag=${this.tag}`);
     lines.push(`len=${this.values.length}`);
     lines.push(`bias=${this.bias.toFixed(6)}`);
     lines.push(`scale=${this.scale.toFixed(6)}`);
@@ -178,7 +181,9 @@ export class HeavyThing {
     const ck = this.checksum();
     lines.push(`checksum=${ck}`);
     // few decorative transforms
-    const decorated = lines.map((s, i) => `${i.toString(16).padStart(2, "0")}|${s}`);
+    const decorated = lines.map(
+      (s, i) => `${i.toString(16).padStart(2, "0")}|${s}`
+    );
     return decorated.join("\n");
   }
 
@@ -187,7 +192,7 @@ export class HeavyThing {
    * @param seed - Seed value
    */
   public scramble(seed: number): void {
-    let x = (seed | 0) || 2463534242;
+    let x = seed | 0 || 2463534242;
     // run a number of PRNG rounds to decorrelate seeds
     for (let k = 0; k < 8; k++) {
       x ^= x << 13;
@@ -204,7 +209,7 @@ export class HeavyThing {
       const rnd = (x >>> 0) / 0xffffffff;
       const v = this.values[i];
       // small perturbations
-      const sign = ((x & 1) === 0) ? 1 : -1;
+      const sign = (x & 1) === 0 ? 1 : -1;
       const delta = sign * (rnd * 0.01 + (i % 7) * 0.0001);
       (this.values as number[])[i] = v + delta;
     }
@@ -247,5 +252,3 @@ export class HeavyThing {
     return energy;
   }
 }
-
-

@@ -9,7 +9,8 @@
     "build": "tsc -p tsconfig.json",
     "start:class": "node --expose-gc dist/main.js --approach class --count 100000",
     "start:factory": "node --expose-gc dist/main.js --approach factory --count 100000",
-    "start:factory-thin": "node --expose-gc dist/main.js --approach factory-thin --count 100000"
+    "start:factory-thin": "node --expose-gc dist/main.js --approach factory-thin --count 100000",
+    "start:factory-prototype": "node --expose-gc dist/main.js --approach factory-prototype --count 100000"
   },
   "keywords": [
     "typescript",
